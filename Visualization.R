@@ -36,16 +36,20 @@ ggplot(broadband, aes(y = Town)) +
   scale_fill_manual(values = c(Average = "green", Minimum = "orange")) +  # Change bar colors here
   guides(fill = guide_legend("Download Speeds"))
 
-#Average download speed
+# Average download speed
 broadband %>% 
   group_by(County) %>% 
-  ggplot(aes(x = County, y = Avgdownload, fill = County)) +
-  scale_y_continuous(breaks = seq(0, 200, 10)) +
+  ggplot(aes(x = Avgdownload, y = County, fill = County)) +
+  scale_x_continuous(breaks = seq(0, 200, 10)) +
   geom_boxplot() +
   scale_fill_manual(values = c("#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854")) +  # Change boxplot colors here
-  labs(title = "Average Download Speed (Mbit/s) by District", x = "District",
-       y = "Average Download Speed (Mbit/s)") +
-  coord_flip()
+  labs(title = "Average Download Speed (Mbit/s) by District", x = "Average Download Speed (Mbit/s)",
+       y = "District") +
+  coord_flip() +
+  theme(axis.text.y = element_text(size = 10),  # Adjust font size for y-axis labels
+        axis.title.y = element_blank(),  # Hide y-axis title
+        legend.position = "right")  # Display legend on the right side
+
 
 #House Prices
 Towns_Population = read_csv("Cleaning/Cleaned datasets/Cleaned_Town_population.csv") %>% 
@@ -72,7 +76,6 @@ House_town = HousePricesclean %>%
 
 write.csv(House_town,"Cleaning/cleaned datasets/HOUSE_TOWN.csv",row.names = FALSE)
 
-#BOXPLOT Average house prices (2020-2022)
 House_town %>% 
   filter(Year == 2020  | Year == 2021 |Year==2022) %>% 
   group_by(County) %>% 
@@ -81,7 +84,7 @@ House_town %>%
                      label = euro) +
   geom_boxplot() +
   coord_flip() +
-  labs(title="House prices by county 2020-2022")
+  labs(title="Average House Prices by County (2020-2022)")
 
 #BARGRAPH house prices of both county (2020-2022)
 HousePricesclean %>% 
@@ -89,7 +92,7 @@ HousePricesclean %>%
   group_by(County) %>% 
   summarise(AveragePrice = mean(Price)) %>% 
   ggplot(aes(x = County, y = AveragePrice)) +
-  geom_bar(position = "stack",stat = "identity", fill = "cornflowerblue") +
+  geom_bar(position = "stack",stat = "identity", fill = "pink") +
   scale_y_continuous(limits=c(0,1000000),breaks = seq(0, 5000000, 50000), 
                      label = euro) +
   geom_text(aes(label = euro(AveragePrice)), 
@@ -97,7 +100,7 @@ HousePricesclean %>%
   labs(title = "Average house prices by County 2022") +
   coord_flip()
 
-#LINEGRAPH Average house prices  (2020-2022)
+#Average house prices Line Graph  (2020-2022)
 HousePricesclean %>%
   filter(Year == 2020 | Year == 2021 | Year == 2022) %>%
   group_by(County) %>%
@@ -129,7 +132,7 @@ crimeData$County[crimeData$County == "SOUTH YORKSHIRE" ] <- "YORKSHIRE"
 view(crimeData)
 
 
-#========Drug Offence Rate per 10000 in 2021-2022 =========
+#========\Drug Offence Rate per 10000 in 2021-2022 =========
 
 filtered_data <- crimeData %>%
   filter((County %in% c("OXFORDSHIRE", "YORKSHIRE")) & (Year %in% c(2021, 2022))) %>% 
@@ -142,27 +145,27 @@ ggplot(data = filtered_data, aes(x = County, y = CrimeCount, fill = CrimeType)) 
   labs(title = "Drug Offence Rate per 10000 in 2021-2022") +
   coord_flip()
 
-#Piechart for 2021 Robbery 
 RobberyData <- crimeData %>% 
-  filter(CrimeType=="Robbery", Year == 2022) %>%
+  filter(CrimeType == "Robbery", Year == 2022) %>%
   group_by(District) %>%
   mutate(sumCount = sum(CrimeCount)) %>% 
   ungroup() %>%
-  mutate(perc =sumCount / sum(CrimeCount)) %>% 
+  mutate(perc = sumCount / sum(CrimeCount)) %>% 
   arrange(perc) %>%
   mutate(labels = scales::percent(perc)) %>% 
   distinct(District, sumCount, perc, labels) %>% 
   select(District, sumCount, perc, labels)
 
-RobberyData %>% 
-  ggplot(aes(x = "", y = perc, fill = District)) +
-  geom_col(color = "white") +
-  geom_label(aes(label = labels),color="black",
-             position = position_stack(vjust = 0.5),
-             show.legend = FALSE) +
-  coord_polar(theta = "y") +
-  theme_void()+
-  labs(title="2022 Robbery by District")
+# Create the pie chart
+print(RobberyData %>% 
+        ggplot(aes(x = "", y = perc, fill = District)) +
+        geom_col(color = "white") +
+        geom_label(aes(label = labels), color = "black",
+                   position = position_stack(vjust = 0.5),
+                   show.legend = FALSE) +
+        coord_polar(theta = "y") +
+        theme_void() +
+        labs(title = "2022 Robbery by District"))
 
 #LINEGRAPH of drug offence rate per 10000 people from 2021 -2022 of both city
 
@@ -249,7 +252,7 @@ schoolData = schoolData %>%
   na.omit() 
 
 
-#- box plot= average attenment score in 2022 both country district
+#BoxPlot of AverageAttainment score in 2022 both county district
 
 schoolData %>%
   group_by(District) %>%
@@ -260,8 +263,7 @@ schoolData %>%
   scale_x_discrete() +
   labs(title = "Average Attainment8Score by district")
 
-#   - line chart = oxfordshire district average attenment score  from 2020 - 2022
-
+#linechart Oxfordshire district average attainment score  from 2020 - 2022
 merged_data <- OXFORDSHIREschool %>%
   inner_join(Town, by ="shortPostcode") %>% 
   na.omit()
@@ -271,8 +273,6 @@ filtered_data <- merged_data %>%
   filter(Year %in% c(2020, 2021, 2022)) %>%
   group_by(District, Year) %>%
   summarise(AverageAttainment = mean(Attainment8Score))
-
-
 filtered_data
 
 ggplot(filtered_data, aes(x = Year, y = AverageAttainment, group = District)) +
@@ -282,8 +282,7 @@ ggplot(filtered_data, aes(x = Year, y = AverageAttainment, group = District)) +
   labs(title = "Oxfordshire District Average Attainment Score from 2020 to 2022")
 
 
-#   - line chart = yorkshire  district average attenment score from 2020-2022
-
+#line chart Yorkshire  district average attainment score from 2020-2022
 merged_data_york <- YORKSHIREschool %>%
   inner_join(Town, by ="shortPostcode")
 view(merged_data_york)
@@ -292,8 +291,6 @@ filtered_data_york <- merged_data_york %>%
   filter(Year == 2020 | Year == 2021 | Year == 2022) %>%
   group_by(District, Year) %>%
   summarise(AverageAttainment = mean(Attainment8Score))
-
-
 
 ggplot(filtered_data_york, aes(x = Year, y = AverageAttainment, group = District)) +
   geom_line(size = 1, color = "red") +
@@ -322,16 +319,13 @@ schools=read_csv("Cleaning/Cleaned Datasets/Cleaned_School_Data.csv") %>%
   na.omit()
 
 
-#------------------------------House prices vs Download Speed----------------------------------------
-
+#House prices vs Download Speed
 options(scipen=999)
-
 HousePrices = prices %>%
   filter(Year=="2021" | Year=="2022") %>%
   left_join(Towns,by="shortPostcode") %>%  
   group_by(Town,County) %>%
   summarise(Price=mean(Price))
-
 
 BroardbandSpeeds = speeds %>%
   left_join(Towns,by="shortPostcode") %>%
@@ -425,8 +419,6 @@ attainment= schools %>%
   group_by(Town,County) %>%
   summarise(meanAttainment=mean(Attainment8Score))
 
-
-
 Drugs = crime %>%
   left_join(Towns_Populations,by="shortPostcode") %>%
   group_by(Town,County) %>%
@@ -435,12 +427,10 @@ Drugs = crime %>%
   as_tibble() %>% 
   na.omit()
 
-
 lm_res3 = Drugs %>% left_join(attainment ,by="Town") %>% 
   na.omit()
 
 lm_res3
-
 model3 = lm(data= lm_res3, DrugOffenceRate~meanAttainment)
 summary(model3)
 

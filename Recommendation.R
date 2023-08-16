@@ -51,7 +51,6 @@ crime_rank = crime_score %>%
   left_join(Town,by="shortPostcode") %>% 
   na.omit()
 
-
 crime_rank=crime_rank%>% 
   group_by(Town) %>% 
   summarise(score=mean(CrimeCount)) %>% 
@@ -78,6 +77,24 @@ school_rank=school_rank%>%
 school_rank
 view(school_rank)
 
+#Joining all filtered dataset
+Combined_Data= housePrices%>% 
+  left_join(download_speed,by= c("Town"),relationship="many-to-many") %>% 
+  na.omit()
+Combined_Data= Combined_Data%>% 
+  left_join(crime_rank,by= c("Town"),relationship="many-to-many") %>% 
+  na.omit()
+Combined_Data= Combined_Data%>% 
+  left_join(school_rank,by= c("Town"),relationship="many-to-many") %>% 
+  na.omit()
+#Calculating total score
+Combined_Data= Combined_Data%>% 
+  mutate(TotalScore=(HouseScore+Schoolscore+score+DownloadScore)/4)
+Final_Data=Combined_Data%>% 
+  select(Town,Schoolscore,score,HouseScore,DownloadScore,TotalScore)%>%
+  arrange(desc(TotalScore))%>% 
+  na.omit()
 
+print(Final_Data)
 
 
