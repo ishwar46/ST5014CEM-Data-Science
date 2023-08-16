@@ -16,12 +16,9 @@ LSOA_Cleaned = LSOA %>%
   group_by(lsoa11cd) %>% 
   select(lsoa11cd,shortPostcode,Town,District,County) 
 
-
-
 LSOA_Cleaned
-
 
 colnames(LSOA_Cleaned)[1] <- "LSOA code"
 view(LSOA_Cleaned)
-write.csv(LSOA_Cleaned,"Cleaning/Cleaned Datasets/Cleaned_LSOA.csv",row.names = FALSE,col.names = FALS)
+write.csv(LSOA_Cleaned,"Cleaning/Cleaned Datasets/Cleaned_LSOA.csv",row.names = FALSE,col.names = FALSE)
 
